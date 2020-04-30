@@ -15,6 +15,10 @@ class Task(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String, default='Task #{}'.format(id))
 
+    solutions = relationship("Solution")  # one to many
+    intermediate_results = relationship("IntermediateResult")  # one to many
+    condition = relationship("TaskCondition", backref='task', uselist=False)  # one to one
+
 
 class Solution(Base):
     __tablename__ = 'solutions'
@@ -25,19 +29,16 @@ class Solution(Base):
     method = Column(String)
 
     task_id = Column(Integer, ForeignKey('tasks.id'))
-    #task = relationship("Task", back_populates="solutions")
 
 
 class IntermediateResult(Base):
-    __tablename__ = 'intermediate_result'
+    __tablename__ = 'intermediate_results'
 
     id = Column(Integer, primary_key=True)
     X = Column(ARRAY(Integer))
     metrics = Column(Integer)
 
-
-    #owner = relationship('Users', backref='users')
-    #task_id = relationship("Task", back_populates="intermediate_results")
+    task_id = Column(Integer, ForeignKey('tasks.id'))
 
 
 class TaskCondition(Base):
@@ -48,22 +49,37 @@ class TaskCondition(Base):
     B = Column(ARRAY(Integer))
     E = Column(ARRAY(Integer))
 
-    #task = relationship("Task", back_populates="task_conditions")
+    task_id = Column(Integer, ForeignKey('tasks.id'))
 
 
-engine = create_engine(db_url)  # sqlite:///data/db/users.db
-#Task.solutions = relationship("Solution", order_by=Solution.id, back_populates="task")
-# Task.intermediate_results = relationship("IntermediateResult", order_by=IntermediateResult.id, back_populates="task")
-# Task.task_conditions = relationship("TaskCondition", order_by=TaskCondition.id, back_populates="task")
-
+engine = create_engine(db_url)
 Base.metadata.create_all(bind=engine)
-
 Session = sessionmaker(bind=engine)
 
-session = Session()
+
+def get_presets_conditions():
+    session = Session()
+    all_tasks = session.query(Task).all()
+    conditions_ids = [task.condition.id for task in all_tasks]
+    conditions = session.query(TaskCondition).filter(TaskCondition.id.in_(conditions_ids)).all()
+
+    presets = []
+    for condition in conditions:
+        be = []
+        for b, e in zip(condition.B, condition.E):
+            be.append((b, e))
+
+        presets.append({
+            'task_id': condition.task_id,
+            'experts': be
+        })
+
+    session.close()
+    return presets
+
 # u = Task(name='sdj312')
 # session.add(u)
 # session.commit()
 # print([(i.id, i.name) for i in session.query(Task).all()])
 #
-# session.close()
+
