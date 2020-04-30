@@ -3,6 +3,7 @@ import SessionState
 import os
 
 from db import get_presets_conditions
+from algorithms import ExpertsTask
 
 
 def presentation_page():
@@ -15,9 +16,13 @@ def file_selector(folder_path='./data/input_files'):
     return os.path.join(folder_path, selected_filename)
 
 
-def show_answer():
-    st.title('answer')
+def show_answer(condition):
     st.balloons()
+    st.title('Відповідь')
+    task = ExpertsTask(condition)
+    task.dynamic_algorithm()
+    st.write(task.tf_res)
+    st.write(task.experts_res_list)
 
 
 def solution_page():
@@ -26,8 +31,6 @@ def solution_page():
     session_state = SessionState.get(choose_button=False, input_type='', random='', file='', db='')
     session_state.input_type = st.selectbox('Оберіть спосіб вхідних даних', ['File', 'Data Base', 'Random'])
 
-
-#    if session_state.choose_button:
     if session_state.input_type == 'Random':
             quantity = st.number_input('Кількість експертів', step=1, value=5, min_value=1, max_value=50)
             min_val = st.number_input('Мінімальне значеня', step=1, value=1, min_value=1, max_value=999)
@@ -35,12 +38,7 @@ def solution_page():
             distribution = st.selectbox('Оберіть розподіл випадкових велечин', ['Рівномірне', 'Нормальне'])
 
             if st.button('Solve'):
-                show_answer()
-
-
-        # st.sparkles()
-        # st.rainbows()
-        # st.giphy("unicorns")
+                show_answer([])
         # кол-во, значения от до, и распределния
 
     if session_state.input_type == 'Data Base':
@@ -48,15 +46,17 @@ def solution_page():
         st.dataframe(conditions, width=1000)
         st.number_input('Input ID', step=1, value=1, min_value=1, max_value=len(conditions))
         if st.button('Solve'):
-            show_answer()
+            show_answer(conditions)
 
         # метод решения
 
     if session_state.input_type == 'File':
         filename = file_selector()
         st.write('Ви обрали `%s`' % filename)
-        st.write(parse_condition_csv(filename))
-        st.button('Solve')
+        condition = parse_condition_csv(filename)
+        st.write(condition)
+        if st.button('Solve'):
+            show_answer(condition)
 
 
 def markdown2string(file_path):
