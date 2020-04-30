@@ -18,11 +18,13 @@ def solution_page():
     if st.button('Обрати'):
         if input_type == 'Random':
             st.button('Solve')
+            # кол-во, значения от до, и распределния
 
         if input_type == 'Data Base':
-            st.dataframe([1,23,4])
+            st.dataframe([1, 23, 4])
             st.number_input('Input ID')
             st.button('Solve')
+            # метод решения
 
         if input_type == 'File':
             filename = file_selector()
@@ -50,6 +52,7 @@ if __name__ == '__main__':
 
     if page == 'Presentation':
         presentation_page()
+        # описание алгоритмов
 
     if page == 'Solve':
         solution_page()

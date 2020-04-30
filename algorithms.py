@@ -99,6 +99,7 @@ class ExpertsTask:
         self.__restore_init_lists()
         self.__target_function()
         self.solution_method = 'Dynamic programming algorithm'
+
         return None
 
 
