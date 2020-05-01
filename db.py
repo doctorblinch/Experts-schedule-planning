@@ -79,6 +79,18 @@ def write_task_to_db(condition, answer, target_func_value, method=''):
     session.commit()
     session.close()
 
+def show_db():
+    if not db_inited:
+        init_db()
+
+    session = Session()
+    tasks = [{'id': i.id, 'name': i.name} for i in session.query(Task).all()]
+    conditions = [{'id': i.id, 'task_id': i.task_id, 'Experts E': i.E, 'Experts B': i.B}
+                  for i in session.query(TaskCondition).all()]
+    solutions = [{'id': i.id, 'task_id': i.task_id, 'Experts list': i.X, 'Metrics': i.metrics, 'Method': i.method}
+                 for i in session.query(Solution).all()]
+
+    return tasks, conditions, solutions
 
 def get_presets_conditions():
     if not db_inited:

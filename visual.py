@@ -3,7 +3,7 @@ import SessionState
 import random
 import os
 
-from db import get_presets_conditions, write_task_to_db
+from db import get_presets_conditions, write_task_to_db, show_db
 from algorithms import ExpertsTask
 
 
@@ -68,10 +68,10 @@ def solution_page():
 
     if session_state.input_type == 'Data Base':
         conditions = get_presets_conditions()
-        st.dataframe(conditions, width=1000)
-        condition_id2solve = st.number_input('Введіть ID', step=1, value=1, min_value=1, max_value=len(conditions))
+        st.table(conditions)
+        session_state.condition_id2solve = st.number_input('Введіть ID', step=1, value=1, min_value=1, max_value=len(conditions))
 
-        condition2solve = list(filter(lambda cond: cond.get('task_id') == condition_id2solve, conditions))[0]
+        condition2solve = list(filter(lambda cond: cond.get('task_id') == session_state.condition_id2solve, conditions))[0]
         if st.button('Розв\'язати'):
             show_answer(condition2solve.get('experts', []))
 
@@ -114,10 +114,24 @@ def technical_page():
     st.markdown(markdown2string('data/markdown/technical_page.md'))
 
 
+def show_db_page():
+    st.title('База данних')
+    tasks, conditions, solutions = show_db()
+    st.write('Задачі:')
+    st.table(tasks)
+    st.write('Умови:')
+    st.table(conditions)
+    st.write('Розв\'язки:')
+    st.table(solutions)
+
+
 def main():
     st.sidebar.title("Оберіть сторінку:")
-    pages = ['Presentation', 'Solve', 'Technical details']
+    pages = ['Presentation', 'Solve', 'Show DB', 'Technical details']
     page = st.sidebar.radio("Навігація", options=pages)
+
+    if page == 'Show DB':
+        show_db_page()
 
     if page == 'Presentation':
         presentation_page()
