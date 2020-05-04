@@ -1,10 +1,14 @@
+import random
+
 import streamlit as st
 import SessionState
-import random
 import os
 
 from db import get_presets_conditions, write_task_to_db, show_db
+from bokeh.plotting import figure
+from bokeh.models import HoverTool
 from algorithms import ExpertsTask
+from functions import create_file_with_condition, markdown2string, parse_condition_csv, generate_random_condition, configure_height4graph_from_condition
 
 
 def presentation_page():
@@ -17,35 +21,46 @@ def file_selector(folder_path='./data/input_files'):
     return os.path.join(folder_path, selected_filename)
 
 
-def show_answer(condition, write_to_db=True):
+def show_answer(condition, method='Метод динамічного програмування', write_to_db=False):
     st.balloons()
     st.title('Відповідь')
     task = ExpertsTask(condition)
-    task.dynamic_algorithm()
-    st.write(task.tf_res)
-    st.write(task.experts_res_list)
+    if method == 'Метод динамічного програмування':
+        task.dynamic_algorithm()
+    elif method == 'Жадний алгоритм + рекурсивний покращувач':
+        task.greedy_algorithm()
+        task.recursive_optimization()
+
+    st.write('Метод розв\'язання - "{}"'.format(task.solution_method))
+    st.write('Значення цільової функції = {}.'.format(task.tf_res))
+    st.write('Вектор взятих експертів X={}.'.format(task.experts_res_list))
     if write_to_db:
         write_task_to_db(condition, task.experts_res_list, task.tf_res, method=task.solution_method)
 
+    pss = configure_height4graph_from_condition(task.experts)
+    # st.write(pss)
+    _tools_to_show = 'box_zoom,pan,save,hover,reset,tap,wheel_zoom'
+    p = figure(height=200, tools=_tools_to_show)
+    for i in range(len(pss)):
+        p.line([pss[i][0], pss[i][1]], [pss[i][2], pss[i][2]],
+               color='red' if task.experts_res_list[i] == 1 else 'blue',
+               line_width=4, line_dash="solid")
+    hover = p.select(dict(type=HoverTool))
+    hover.tooltips = [("Start", "@x"), ]
+    hover.mode = 'mouse'
 
-def generate_random_condition(quantity, min_val, max_val, distribution):
-    condition = []
-    if distribution == 'Нормальний':
-        for _ in range(quantity):
-            a = int(random.normalvariate((max_val + min_val) / 2, (max_val + min_val) / 5))
-            b = int(random.normalvariate((max_val + min_val) / 2, (max_val + min_val) / 5))
-            a = max_val if a > max_val else a
-            a = min_val if a < min_val else a
-            b = max_val if b > max_val else b
-            b = min_val if b < min_val else b
-            condition.append((min(a, b), max(a, b)))
-    elif distribution == 'Рівномірний':
-        for _ in range(quantity):
-            a = random.randint(min_val, max_val)
-            b = random.randint(min_val, max_val)
-            condition.append((min(a, b), max(a, b)))
-
-    return condition
+    st.bokeh_chart(p)
+    st.write('На графіку червоні проміжкі відповідають обраним експертам, жовті - не обраним.')
+    # p = figure()
+    # for i in range(len(task.experts)):
+    #     if task.experts_res_list[i] == 1:
+    #         p.line([task.experts[i][0], task.experts[i][1]], [1, 1], color='red', line_width=4,
+    #                line_dash="solid")
+    #     else:
+    #         p.line([task.experts[i][0], task.experts[i][1]], [i + 2, i + 2], color='black', line_width=4,
+    #                line_dash="solid")
+    #
+    # st.bokeh_chart(p)
 
 
 def solution_page():
@@ -59,54 +74,81 @@ def solution_page():
         min_val = st.number_input('Мінімальне значеня', step=1, value=1, min_value=1, max_value=999)
         max_val = st.number_input('Максимальне значеня', step=1, value=40, min_value=1, max_value=999)
         distribution = st.selectbox('Оберіть розподіл випадкових велечин', ['Рівномірний', 'Нормальний'])
+        method = st.selectbox('Оберіть метод вирішення задачі',
+                              ['Метод динамічного програмування', 'Жадний алгоритм + рекурсивний покращувач'])
 
         if st.button('Розв\'язати'):
             condition = generate_random_condition(quantity, min_val, max_val, distribution)
             st.write('Згенерували наступну умову: {}'.format(condition))
-            show_answer(condition)
-    # кол-во, значения от до, и распределния
+            st.bokeh_chart(draw_graphic_of_condition(condition))
+            show_answer(condition, method)
 
     if session_state.input_type == 'Data Base':
         conditions = get_presets_conditions()
         st.table(conditions)
-        session_state.condition_id2solve = st.number_input('Введіть ID', step=1, value=1, min_value=1, max_value=len(conditions))
+        session_state.condition_id2solve = st.number_input('Введіть ID', step=1, value=1, min_value=1,
+                                                           max_value=len(conditions))
 
-        condition2solve = list(filter(lambda cond: cond.get('task_id') == session_state.condition_id2solve, conditions))[0]
+        condition2solve = list(filter(
+            lambda cond: cond.get('task_id') == session_state.condition_id2solve, conditions)
+        )[0]
+        method = st.selectbox('Оберіть метод вирішення задачі',
+                              ['Метод динамічного програмування', 'Жадний алгоритм + рекурсивний покращувач'])
         if st.button('Розв\'язати'):
-            show_answer(condition2solve.get('experts', []))
-
-        # метод решения
+            show_answer(condition2solve.get('experts', []), method)
 
     if session_state.input_type == 'File':
         filename = file_selector()
         st.write('Ви обрали `%s`' % filename)
         condition = parse_condition_csv(filename)
+        st.bokeh_chart(draw_graphic_of_condition(condition))
         st.write(condition)
+        method = st.selectbox('Оберіть метод вирішення задачі',
+                              ['Метод динамічного програмування', 'Жадний алгоритм + рекурсивний покращувач'])
         if st.button('Розв\'язати'):
-            show_answer(condition)
+            show_answer(condition, method)
 
 
-def markdown2string(file_path):
-    with open(file_path, 'r') as f:
-        string = f.read()
-
-    return string
+@st.cache(allow_output_mutation=True)
+def get_condition_state():
+    return []
 
 
-def parse_condition_csv(path):
-    experts = []
-    try:
-        with open(path, 'r') as f:
-            lines = f.readlines()
-            for line in lines:
-                experts.append(
-                    tuple(map(int, line.strip().split(',')))
-                )
-    except:
-        return 'Wrong file format!'
+def create_condition_page():
+    st.title('Сторінка для створення власної умови задачі')
+    annotation = get_condition_state()
+    if st.button('Додати експерта'):
+        annotation.append(tuple())
 
-    return experts
+    if st.button('Видалити останнього експерта'):
+        annotation.pop(len(annotation)-1)
 
+    for i in range(len(annotation)):
+        st.subheader('Експерт №{}'.format(i + 1))
+        a = st.number_input('Початок роботи {}-го експерта'.format(i + 1), step=1, value=5, min_value=1, max_value=100)
+        b = st.number_input('Кінець роботи {}-го експерта'.format(i + 1), step=1, value=20, min_value=1, max_value=100)
+        annotation[i] = (a, b)
+
+    if st.button('Візуалізувати'):
+        st.bokeh_chart(draw_graphic_of_condition(annotation))
+    if st.button('Створити'):
+        create_file_with_condition(annotation)
+
+
+def draw_graphic_of_condition(cond):
+    colors = ['firebrick', 'navy', 'green', 'yellow', 'red', 'blue', 'pink', 'orange',
+              '#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#d62728']
+    pss = configure_height4graph_from_condition(cond)
+    # st.write(pss)
+    _tools_to_show = 'box_zoom,pan,save,hover,reset,tap,wheel_zoom'
+    p = figure(height=200, tools=_tools_to_show)
+    for i in range(len(pss)):
+        p.line([pss[i][0], pss[i][1]], [pss[i][2], pss[i][2]], color=random.choice(colors), line_width=4,
+               line_dash="solid")
+    hover = p.select(dict(type=HoverTool))
+    hover.tooltips = [("Start", "@x"), ]
+    hover.mode = 'mouse'
+    return p
 
 def technical_page():
     st.title('Технічна сторінка')
@@ -127,7 +169,7 @@ def show_db_page():
 
 def main():
     st.sidebar.title("Оберіть сторінку:")
-    pages = ['Presentation', 'Solve', 'Show DB', 'Technical details']
+    pages = ['Presentation', 'Solve', 'Show DB', 'Create condition', 'Technical details']
     page = st.sidebar.radio("Навігація", options=pages)
 
     if page == 'Show DB':
@@ -135,13 +177,15 @@ def main():
 
     if page == 'Presentation':
         presentation_page()
-        # описание алгоритмов
 
     if page == 'Solve':
         solution_page()
 
     if page == 'Technical details':
         technical_page()
+
+    if page == 'Create condition':
+        create_condition_page()
 
 
 main()
