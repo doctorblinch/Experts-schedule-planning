@@ -17,91 +17,39 @@ class ExpertsTask:
         self.indices = list(range(len(experts_list)))
 
     def __sort_init_lists(self):
-        zipped_pairs = zip(self.experts, self.indices)
+        zipped_pairs = zip(self.experts, self.experts_res_list, self.indices)
         zipped_pairs = sorted(zipped_pairs, key=lambda pair: pair[0][1])
-        self.experts = [i for i, j in zipped_pairs]
-        self.indices = [j for i, j in zipped_pairs]
+        self.experts = [i for i, j, k in zipped_pairs]
+        self.experts_res_list = [j for i, j, k in zipped_pairs]
+        self.indices = [k for i, j, k in zipped_pairs]
 
         return None
 
     def __restore_init_lists(self):
-        zipped_pairs = zip(self.experts, self.indices)
-        zipped_pairs = sorted(zipped_pairs, key=lambda pair: pair[1])
-        self.experts = [i for i, j in zipped_pairs]
-        self.indices = [j for i, j in zipped_pairs]
+        zipped_pairs = zip(self.experts, self.experts_res_list, self.indices)
+        zipped_pairs = sorted(zipped_pairs, key=lambda pair: pair[2])
+        self.experts = [i for i, j, k in zipped_pairs]
+        self.experts_res_list = [j for i, j, k in zipped_pairs]
+        self.indices = [k for i, j, k in zipped_pairs]
 
         return None
 
     def __target_function(self, res_list=None):
         result = 0
-        outside_res_list = False
+        outside_res_list = True
         if res_list is None:
-            outside_res_list = True
+            outside_res_list = False
             res_list = self.experts_res_list
 
         for expert, i in zip(self.experts, res_list):
             result += (expert[1] - expert[0]) * i
 
-        if outside_res_list:
+        if not outside_res_list:
             self.tf_res = result
 
         return result
 
-    def __compute_previous_intervals(self):
-        start = [i[0] for i in self.experts]
-        finish = [i[1] for i in self.experts]
-
-        prev = []
-        for j in range(len(self.experts)):
-            i = bisect.bisect_right(finish, start[j]) - 1
-            prev.append(i)
-
-        return prev
-
-    def __compute_solution(self, j, p, opt):
-        if j >= 0:
-            if self.experts[j][1] - self.experts[j][0] + opt[p[j]] > opt[j - 1]:
-                self.experts_res_list[self.indices[j]] = 1
-                self.__compute_solution(p[j], p, opt)
-            else:
-                self.__compute_solution(j - 1, p, opt)
-
-        return None
-
-    def greedy_algorithm(self, pos=None):
-        outside_pos = False
-        if pos is None:
-            outside_pos = True
-            pos = [1 for _ in self.experts]
-
-        result_list = [0 for _ in self.experts]
-
-        while 1 in pos:
-            max_len = -1
-            max_index = -1
-            for i in range(len(self.experts)):
-                if pos[i] == 1 and self.experts[i][1] - self.experts[i][0] > max_len:
-                    max_len = self.experts[i][1] - self.experts[i][0]
-                    max_index = i
-
-            result_list[max_index] = 1
-            pos[max_index] = 0
-
-            for i in range(len(self.experts)):
-                if self.experts[max_index][0] < self.experts[i][1] and self.experts[max_index][1] > self.experts[i][0]:
-                    pos[i] = 0
-
-        if outside_pos:
-            self.experts_res_list = result_list
-            self.__target_function()
-            self.solution_method = 'Greedy algorithm'
-
-        return result_list
-
-    def recursive_optimization(self, first_loop=True):
-        if first_loop:
-            self.greedy_algorithm()
-
+    def __optimization(self):
         length = len(self.experts)
         spaces_values = [0 for _ in range(length + 1)]
         spaces_indices = [-1 for _ in range(length + 1)]
@@ -122,7 +70,6 @@ class ExpertsTask:
 
         while sum(spaces_values) != 0:
             max_index = spaces_values.index(max(spaces_values))
-
             pos = [1 for _ in self.experts]
 
             if max_index != length:
@@ -130,6 +77,7 @@ class ExpertsTask:
 
             if spaces_indices[max_index] != -1:
                 pos[spaces_indices[max_index]] = 0
+
             new_res_list = self.greedy_algorithm(pos)
             new_tf_res = self.__target_function(new_res_list)
 
@@ -137,10 +85,66 @@ class ExpertsTask:
                 spaces_values = [0 for _ in range(length + 1)]
                 self.experts_res_list = new_res_list
                 self.tf_res = new_tf_res
-                self.recursive_optimization(first_loop=False)
+                self.__optimization()
             else:
                 spaces_values[max_index] = 0
 
+    def __compute_previous_intervals(self):
+        start = [i[0] for i in self.experts]
+        finish = [i[1] for i in self.experts]
+
+        prev = []
+        for j in range(len(self.experts)):
+            i = bisect.bisect_right(finish, start[j]) - 1
+            prev.append(i)
+
+        return prev
+
+    def __compute_solution(self, j, p, opt):
+        if j >= 0:
+            if self.experts[j][1] - self.experts[j][0] + opt[p[j]] > opt[j - 1]:
+                self.experts_res_list[j] = 1
+                self.__compute_solution(p[j], p, opt)
+            else:
+                self.__compute_solution(j - 1, p, opt)
+
+        return None
+
+    def greedy_algorithm(self, pos=None):
+        outside_pos = True
+        if pos is None:
+            outside_pos = False
+            pos = [1 for _ in self.experts]
+
+        result_list = [0 for _ in self.experts]
+
+        while 1 in pos:
+            max_len = -1
+            max_index = -1
+            for i in range(len(self.experts)):
+                if pos[i] == 1 and self.experts[i][1] - self.experts[i][0] > max_len:
+                    max_len = self.experts[i][1] - self.experts[i][0]
+                    max_index = i
+
+            result_list[max_index] = 1
+            pos[max_index] = 0
+
+            for i in range(len(self.experts)):
+                if self.experts[max_index][0] < self.experts[i][1] and self.experts[max_index][1] > self.experts[i][0]:
+                    pos[i] = 0
+
+        if not outside_pos:
+            self.experts_res_list = result_list
+            self.__target_function()
+            self.solution_method = 'Greedy algorithm'
+
+        return result_list
+
+    def recursive_optimization(self, first_loop=True):
+        self.greedy_algorithm()
+        self.__sort_init_lists()
+        self.__optimization()
+        self.__restore_init_lists()
         self.solution_method = 'Greedy algorithm + recursive optimization'
         return None
 
