@@ -21,7 +21,7 @@ def generate_experts(n):
 
 def execution_time():
     start = timeit.default_timer()
-    exps_task.greedy_algorithm()
+    exps_task.dynamic_algorithm()
     end = timeit.default_timer()
     return (end - start) * 1000
 
@@ -42,7 +42,8 @@ if __name__ == '__main__':
 
         times.append(execution_time())
 
-    plt.plot(amounts, times, amounts, comp_log, 'red')
+    plt.plot(amounts, times, amounts, comp_log, comp_sq, 'red')
+    plt.legend(['f(N)', 'N*log(N)', 'N^2'])
     plt.ylabel('Execution time (in milliseconds)')
     plt.xlabel('Amount of experts')
     plt.show()

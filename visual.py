@@ -13,6 +13,41 @@ from functions import create_file_with_condition, markdown2string, parse_conditi
 
 def presentation_page():
     st.markdown(markdown2string('data/markdown/presentation_page.md'))
+    st.markdown('''## 3. Складність алгоритмів
+        
+На графіках далі ми будемо бачити залежність часу 
+виконання алгоритму від кількості експертів.
+        
+### 3.1 Жадібний алгоритм
+        
+Як бачимо на малюнку жадібний алгоритм емперично має складність 
+$O(N) = N * log(N)$ 
+        
+На 2000 екпетів:''')
+    st.image('data/pictures/greedy2000.png')
+    st.write('На 5000 екпетів:')
+    st.image('data/pictures/greedy.png')
+
+    st.markdown('''
+### 3.2 Жадібний алгоритм + рекурсивний оптимізатор
+
+Як бачимо на малюнку жадібний алгоритм разом з рекурсивним оптимізатором емперично має складність 
+$O(N) = N * log(N)$ 
+
+На 2000 експертів''')
+    st.image('data/pictures/recursive2000.png')
+    st.write('На 5000 експертів')
+    st.image('data/pictures/greedy_and_recursive.png')
+
+    st.markdown('''### 3.3 Динамічний алгоритм
+Як бачимо на малюнку динамічний алгоритм емперично має складність 
+$O(N) = N * log(N)$
+
+На 2000 експертів 
+    ''')
+    st.image('data/pictures/dynamic2000.png')
+    st.write('На 5000 експертів')
+    st.image('data/pictures/dynamic.png')
 
 
 def file_selector(folder_path='./data/input_files'):
@@ -51,16 +86,6 @@ def show_answer(condition, method='Метод динамічного прогр�
 
     st.bokeh_chart(p)
     st.write('На графіку червоні проміжкі відповідають обраним експертам, жовті - не обраним.')
-    # p = figure()
-    # for i in range(len(task.experts)):
-    #     if task.experts_res_list[i] == 1:
-    #         p.line([task.experts[i][0], task.experts[i][1]], [1, 1], color='red', line_width=4,
-    #                line_dash="solid")
-    #     else:
-    #         p.line([task.experts[i][0], task.experts[i][1]], [i + 2, i + 2], color='black', line_width=4,
-    #                line_dash="solid")
-    #
-    # st.bokeh_chart(p)
 
 
 def solution_page():
@@ -149,6 +174,7 @@ def draw_graphic_of_condition(cond):
     hover.tooltips = [("Start", "@x"), ]
     hover.mode = 'mouse'
     return p
+
 
 def technical_page():
     st.title('Технічна сторінка')

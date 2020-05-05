@@ -96,5 +96,5 @@ def generate_random_condition(quantity, min_val, max_val, distribution):
 
 
 # EXPERTS = [(1, 14), (2, 7), (7, 16), (14, 22), (18, 28), (25, 30), (28, 35), (30, 34), (34, 40)]
-EXPERTS = [(2, 4), (2, 4), (5, 7), (2, 4)]
-print(configure_height4graph_from_condition(EXPERTS))
+#EXPERTS = [(2, 4), (2, 4), (5, 7), (2, 4)]
+#print(configure_height4graph_from_condition(EXPERTS))
