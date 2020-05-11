@@ -1,9 +1,6 @@
 import bisect
 import collections
 
-EXPERTS = [(1, 14), (2, 7), (7, 16), (14, 22), (18, 28), (25, 30), (28, 35), (30, 34), (34, 40)]
-
-
 # N = 10
 # EXPERTS = [(b:=random.randint(1, 50), random.randint(b, 50)) for i in range(N)]
 
@@ -170,6 +167,11 @@ class ExpertsTask:
 
 
 if __name__ == '__main__':
+    EXPERTS = [(1, 14), (2, 7), (7, 16), (14, 22), (18, 28), (25, 30), (28, 35), (30, 34), (34, 40)]
+
+    # from functions import generate_random_condition
+    # expertsss = generate_random_condition(1000, 1, 100000, 'Рівномірний для відрізків обмеженної довжини', 200)
+
     example = ExpertsTask(EXPERTS)
     print('Experts =', example.experts)
     print('X =', example.experts_res_list)

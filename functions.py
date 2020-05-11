@@ -79,33 +79,39 @@ def generate_random_condition(quantity, min_val, max_val, distribution, max_len)
     condition = []
     if distribution == 'Усічений нормальний':
         for _ in range(quantity):
-            a = int(random.normalvariate((max_val + min_val) / 2, (max_val + min_val) / 5))
-            b = int(random.normalvariate((max_val + min_val) / 2, (max_val + min_val) / 5))
-            a = max_val if a > max_val else a
-            a = min_val if a < min_val else a
-            b = max_val if b > max_val else b
-            b = min_val if b < min_val else b
-            a, b = min(a, b), max(a, b)
-            if b - a > max_len:
-                delta = int((b - a - max_len) / 2)
-                b -= delta
-                a += delta
+            a = 0
+            b = 0
+            while a == b:
+                a = int(random.normalvariate((max_val + min_val) / 2, (max_val + min_val) / 5))
+                b = int(random.normalvariate((max_val + min_val) / 2, (max_val + min_val) / 5))
+                a = max_val if a > max_val else a
+                a = min_val if a < min_val else a
+                b = max_val if b > max_val else b
+                b = min_val if b < min_val else b
+                a, b = min(a, b), max(a, b)
+                if b - a > max_len:
+                    delta = int((b - a - max_len) / 2)
+                    b -= delta
+                    a += delta
             condition.append((a, b))
 
     elif distribution == 'Рівномірний':
         for _ in range(quantity):
-            a = random.randint(min_val, max_val)
-            b = random.randint(min_val, max_val)
-            a, b = min(a, b), max(a, b)
-            if b - a > max_len:
-                delta = int((b - a - max_len) / 2)
-                b -= delta
-                a += delta
+            a = 0
+            b = 0
+            while a == b:
+                a = random.randint(min_val, max_val - 1)
+                b = random.randint(min_val + 1, max_val)
+                a, b = min(a, b), max(a, b)
+                if b - a > max_len:
+                    delta = int((b - a - max_len) / 2)
+                    b -= delta
+                    a += delta
             condition.append((a, b))
 
     elif distribution == 'Рівномірний для відрізків обмеженної довжини':
         for _ in range(quantity):
-            a = random.randint(min_val, max_val)
+            a = random.randint(min_val, max_val - 1)
             b = a + random.randint(1, max_len)
             b = max_val if b > max_val else b
             condition.append((a, b))
