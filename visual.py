@@ -23,9 +23,9 @@ def presentation_page():
 Як бачимо на малюнку жадібний алгоритм емперично має складність 
 $O(N) = N * log(N)$ 
         
-На 2000 екпетів:''')
+На 2000 експертів:''')
     st.image('data/pictures/greedy2000.png')
-    st.write('На 5000 екпетів:')
+    st.write('На 5000 експетів:')
     st.image('data/pictures/greedy.png')
 
     st.markdown('''
@@ -85,28 +85,41 @@ def show_answer(condition, method='Метод динамічного прогр�
     hover.mode = 'mouse'
 
     st.bokeh_chart(p)
-    st.write('На графіку червоні проміжкі відповідають обраним експертам, жовті - не обраним.')
+    st.write('На графіку червоні проміжкі відповідають обраним експертам, сині - не обраним.')
 
 
 def solution_page():
-    st.title('Сторінка з рішенням задачі')
+    st.title('Сторінка з розв\'язанням задачі')
 
     session_state = SessionState.get(choose_button=False, input_type='', random='', file='', db='')
     session_state.input_type = st.selectbox('Оберіть спосіб вхідних даних', ['File', 'Data Base', 'Random'])
 
     if session_state.input_type == 'Random':
-        quantity = st.number_input('Кількість експертів', step=1, value=5, min_value=1, max_value=50)
-        min_val = st.number_input('Мінімальне значеня', step=1, value=1, min_value=1, max_value=999)
-        max_val = st.number_input('Максимальне значеня', step=1, value=40, min_value=1, max_value=999)
-        distribution = st.selectbox('Оберіть розподіл випадкових велечин', ['Рівномірний', 'Нормальний'])
+        quantity = st.number_input('Кількість експертів', step=1, value=50, min_value=1, max_value=200)
+        min_val = st.number_input('Мінімальне значеня', step=1, value=1, min_value=1, max_value=99999)
+        max_val = st.number_input('Максимальне значеня', step=1, value=1000, min_value=1, max_value=99999)
+        max_len = st.number_input('Максимальна тривалість роботи експерта',
+                                  step=1, value=200, min_value=1, max_value=99999)
+        distribution = st.selectbox('Оберіть розподіл випадкових велечин',
+                                    ['Рівномірний', 'Усічений нормальний',
+                                     'Рівномірний для відрізків обмеженної довжини'])
+
         method = st.selectbox('Оберіть метод вирішення задачі',
-                              ['Метод динамічного програмування', 'Жадний алгоритм + рекурсивний покращувач'])
+                              ['Метод динамічного програмування',
+                               'Жадний алгоритм + рекурсивний покращувач',
+                               'Обидва метода']
+                              )
 
         if st.button('Розв\'язати'):
-            condition = generate_random_condition(quantity, min_val, max_val, distribution)
+            condition = generate_random_condition(quantity, min_val, max_val, distribution, max_len)
             st.write('Згенерували наступну умову: {}'.format(condition))
             st.bokeh_chart(draw_graphic_of_condition(condition))
-            show_answer(condition, method)
+
+            if method == 'Обидва метода':
+                show_answer(condition, 'Метод динамічного програмування')
+                show_answer(condition, 'Жадний алгоритм + рекурсивний покращувач')
+            else:
+                show_answer(condition, method)
 
     if session_state.input_type == 'Data Base':
         conditions = get_presets_conditions()
@@ -118,7 +131,11 @@ def solution_page():
             lambda cond: cond.get('task_id') == session_state.condition_id2solve, conditions)
         )[0]
         method = st.selectbox('Оберіть метод вирішення задачі',
-                              ['Метод динамічного програмування', 'Жадний алгоритм + рекурсивний покращувач'])
+                              ['Метод динамічного програмування',
+                               'Жадний алгоритм + рекурсивний покращувач',
+                               'Обидва метода']
+                              )
+
         if st.button('Розв\'язати'):
             show_answer(condition2solve.get('experts', []), method)
 
@@ -127,9 +144,12 @@ def solution_page():
         st.write('Ви обрали `%s`' % filename)
         condition = parse_condition_csv(filename)
         st.bokeh_chart(draw_graphic_of_condition(condition))
-        st.write(condition)
+        # st.write(condition)
         method = st.selectbox('Оберіть метод вирішення задачі',
-                              ['Метод динамічного програмування', 'Жадний алгоритм + рекурсивний покращувач'])
+                              ['Метод динамічного програмування',
+                               'Жадний алгоритм + рекурсивний покращувач',
+                               'Обидва метода']
+                              )
         if st.button('Розв\'язати'):
             show_answer(condition, method)
 
@@ -171,7 +191,7 @@ def draw_graphic_of_condition(cond):
         p.line([pss[i][0], pss[i][1]], [pss[i][2], pss[i][2]], color=random.choice(colors), line_width=4,
                line_dash="solid")
     hover = p.select(dict(type=HoverTool))
-    hover.tooltips = [("Start", "@x"), ]
+    hover.tooltips = [("Time", "@x"), ]
     hover.mode = 'mouse'
     return p
 

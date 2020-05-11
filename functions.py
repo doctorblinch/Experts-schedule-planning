@@ -75,9 +75,9 @@ def parse_condition_csv(path):
     return experts
 
 
-def generate_random_condition(quantity, min_val, max_val, distribution):
+def generate_random_condition(quantity, min_val, max_val, distribution, max_len):
     condition = []
-    if distribution == 'Нормальний':
+    if distribution == 'Усічений нормальний':
         for _ in range(quantity):
             a = int(random.normalvariate((max_val + min_val) / 2, (max_val + min_val) / 5))
             b = int(random.normalvariate((max_val + min_val) / 2, (max_val + min_val) / 5))
@@ -85,16 +85,33 @@ def generate_random_condition(quantity, min_val, max_val, distribution):
             a = min_val if a < min_val else a
             b = max_val if b > max_val else b
             b = min_val if b < min_val else b
-            condition.append((min(a, b), max(a, b)))
+            a, b = min(a, b), max(a, b)
+            if b - a > max_len:
+                delta = int((b - a - max_len) / 2)
+                b -= delta
+                a += delta
+            condition.append((a, b))
+
     elif distribution == 'Рівномірний':
         for _ in range(quantity):
             a = random.randint(min_val, max_val)
             b = random.randint(min_val, max_val)
-            condition.append((min(a, b), max(a, b)))
+            a, b = min(a, b), max(a, b)
+            if b - a > max_len:
+                delta = int((b - a - max_len) / 2)
+                b -= delta
+                a += delta
+            condition.append((a, b))
+
+    elif distribution == 'Рівномірний для відрізків обмеженної довжини':
+        for _ in range(quantity):
+            a = random.randint(min_val, max_val)
+            b = a + random.randint(1, max_len)
+            b = max_val if b > max_val else b
+            condition.append((a, b))
 
     return condition
 
-
 # EXPERTS = [(1, 14), (2, 7), (7, 16), (14, 22), (18, 28), (25, 30), (28, 35), (30, 34), (34, 40)]
-#EXPERTS = [(2, 4), (2, 4), (5, 7), (2, 4)]
-#print(configure_height4graph_from_condition(EXPERTS))
+# EXPERTS = [(2, 4), (2, 4), (5, 7), (2, 4)]
+# print(configure_height4graph_from_condition(EXPERTS))
