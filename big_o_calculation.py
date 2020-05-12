@@ -20,28 +20,28 @@ def generate_experts(n):
     return exps
 
 
-def execution_time_greedy():
+def execution_time_greedy(exps_task):
     start = timeit.default_timer()
     exps_task.greedy_algorithm()
     end = timeit.default_timer()
     return (end - start) * 1000
 
 
-def execution_time_recursive():
+def execution_time_recursive(exps_task):
     start = timeit.default_timer()
     exps_task.recursive_optimization()
     end = timeit.default_timer()
     return (end - start) * 1000
 
 
-def execution_time_dynamic():
+def execution_time_dynamic(exps_task):
     start = timeit.default_timer()
     exps_task.dynamic_algorithm()
     end = timeit.default_timer()
     return (end - start) * 1000
 
 
-if __name__ == '__main__':
+def complexity_plots():
     amounts = range(1, N + 1)
 
     times_greedy = []
@@ -59,13 +59,13 @@ if __name__ == '__main__':
         exps_list = generate_random_condition(i, 1, 1000, 'Рівномірний для відрізків обмеженної довжини', 200)
         exps_task = ExpertsTask(exps_list)
 
-        times_greedy.append(execution_time_greedy())
+        times_greedy.append(execution_time_greedy(exps_task))
         tf_greedy.append(exps_task.tf_res)
 
-        times_recursive.append(execution_time_recursive())
+        times_recursive.append(execution_time_recursive(exps_task))
         tf_recursive.append(exps_task.tf_res)
 
-        times_dynamic.append(execution_time_dynamic())
+        times_dynamic.append(execution_time_dynamic(exps_task))
         tf_dynamic.append(exps_task.tf_res)
 
     comp_log = [n * math.log(n, 2) / 5000 for n in amounts]
@@ -106,3 +106,38 @@ if __name__ == '__main__':
     plt.ylabel('Deviation from the optimal value (in %)')
     plt.xlabel('Amount of experts')
     plt.show()
+
+
+def limits_plots():
+    right_limits = [i * 1000 for i in range(1, 101, 10)]
+    max_len = [i * 100 for i in range(1, 101, 10)]
+
+    times_greedy = []
+    times_recursive = []
+    times_dynamic = []
+
+    tf_greedy = []
+    tf_recursive = []
+    tf_dynamic = []
+
+    for i, j in zip(right_limits, max_len):
+        exps_list = generate_random_condition(N, 1, i, 'Рівномірний для відрізків обмеженної довжини', j)
+        exps_task = ExpertsTask(exps_list)
+
+        times_greedy.append(execution_time_greedy(exps_task))
+        tf_greedy.append(exps_task.tf_res)
+
+        times_recursive.append(execution_time_recursive(exps_task))
+        tf_recursive.append(exps_task.tf_res)
+
+        times_dynamic.append(execution_time_dynamic(exps_task))
+        tf_dynamic.append(exps_task.tf_res)
+
+    plt.plot(right_limits, times_recursive, 'mediumpurple', right_limits, times_greedy, right_limits, times_dynamic, 'limegreen')
+    plt.legend(['Recursive optimization', 'Greedy algorithm', 'dynamic algorithm'])
+    plt.ylabel('Execution time (in milliseconds)')
+    plt.xlabel('Right limit of the end point')
+    plt.show()
+
+if __name__ == '__main__':
+    limits_plots()

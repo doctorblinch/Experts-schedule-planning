@@ -75,6 +75,18 @@ $O(N) = N * log(N)$
     st.write('Для 5000 експертів')
     st.image('data/pictures/deviation5000.png')
 
+    st.markdown('''
+    Залежність часу роботи алгоритмів від вхідних границь часу для генераії експертів,
+    причому максимальний час роботи одного експерта обмежений ≤200:
+            ''')
+    st.image('data/pictures/rightlimit1.png')
+    st.markdown('''
+        Залежність часу роботи алгоритмів від вхідних границь часу для генераії експертів,
+        причому максимальний час роботи одного експерта також збільшується в залежності від
+        кількості простору для генерації експертів:
+                ''')
+    st.image('data/pictures/rightlimit2.png')
+
 
 def file_selector(folder_path='./data/input_files'):
     filenames = os.listdir(folder_path)
