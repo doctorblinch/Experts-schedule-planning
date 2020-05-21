@@ -133,7 +133,7 @@ def solution_page():
     session_state.input_type = st.selectbox('Оберіть спосіб вхідних даних', ['File', 'Data Base', 'Random'])
 
     if session_state.input_type == 'Random':
-        quantity = st.number_input('Кількість експертів', step=1, value=50, min_value=1, max_value=200)
+        quantity = st.number_input('Кількість експертів', step=1, value=50, min_value=1, max_value=500)
         min_val = st.number_input('Мінімальне значеня', step=1, value=1, min_value=1, max_value=99999)
         max_val = st.number_input('Максимальне значеня', step=1, value=1000, min_value=1, max_value=99999)
         max_len = st.number_input('Максимальна тривалість роботи експерта',

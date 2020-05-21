@@ -133,11 +133,13 @@ def limits_plots():
         times_dynamic.append(execution_time_dynamic(exps_task))
         tf_dynamic.append(exps_task.tf_res)
 
-    plt.plot(right_limits, times_recursive, 'mediumpurple', right_limits, times_greedy, right_limits, times_dynamic, 'limegreen')
+    plt.plot(right_limits, times_recursive, 'mediumpurple', right_limits, times_greedy, right_limits, times_dynamic,
+             'limegreen')
     plt.legend(['Recursive optimization', 'Greedy algorithm', 'dynamic algorithm'])
     plt.ylabel('Execution time (in milliseconds)')
     plt.xlabel('Right limit of the end point')
     plt.show()
+
 
 if __name__ == '__main__':
     limits_plots()
