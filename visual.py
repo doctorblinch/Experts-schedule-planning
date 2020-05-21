@@ -272,5 +272,5 @@ def main():
         create_condition_page()
 
 
-if __name__ == __main__:
+if __name__ == '__main__':
     main()
